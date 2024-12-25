@@ -1,4 +1,3 @@
-from . import classmodel
-from . import create_story
-from . import utils
-from . import prompt
+from .create_story import main
+
+__all__ = ["main"]

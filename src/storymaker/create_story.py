@@ -146,7 +146,7 @@ class StoryMaker:
         self.create_novel_post(final_file_name)
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", "-i", type=str)
     parser.add_argument("--output_dir", "-o", type=str)
@@ -154,3 +154,7 @@ if __name__ == "__main__":
     story_maker = StoryMaker()
     characters = load_markdown_as_prompt(args.input)
     story_maker.process_steps(characters, args.output_dir)
+
+
+if __name__ == "__main__":
+    main()
