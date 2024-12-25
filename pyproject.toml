@@ -6,4 +6,4 @@ requires = ["setuptools >= 61",
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
-write_to = "src/story_writer/_version.py"
+write_to = "src/storymaker/_version.py"
