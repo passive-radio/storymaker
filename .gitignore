@@ -5,3 +5,4 @@ dist/
 .env.local
 .env
 __pycache__/
+_version.py
