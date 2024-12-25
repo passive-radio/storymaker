@@ -1,0 +1,5 @@
+include src/storymaker/prompt/*.md 
+
+prune .git
+prune .github
+prune __pycache__
