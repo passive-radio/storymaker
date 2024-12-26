@@ -1,36 +1,20 @@
 import os
-import sys
 import openai
-from dotenv import load_dotenv
-import datetime, zoneinfo
-import pkg_resources
+import datetime
+import zoneinfo
+import random
 import argparse
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from storymaker.utils import load_markdown_as_prompt, count_tokens
+from storymaker.utils import (
+    load_markdown_as_prompt,
+    count_tokens,
+    load_api_key,
+    read_prompt,
+)
 from storymaker.classmodel import NovelFrontmatter
+from storymaker.theme import THEME_LIST
 
 BASE_MAX_COMPLETION_TOKENS = 3000
-
-
-def load_api_key():
-    if os.path.exists(".env.local"):
-        load_dotenv(".env.local")
-    else:
-        load_dotenv()
-    return os.getenv("OPENAI_API_KEY")
-
-
-def get_prompt_path(filename):
-    return pkg_resources.resource_filename(
-        "storymaker", os.path.join("prompt", filename)
-    )
-
-
-def read_prompt(filename):
-    prompt_path = get_prompt_path(filename)
-    with open(prompt_path, "r", encoding="utf-8") as f:
-        return f.read()
 
 
 class StoryMaker:
@@ -72,9 +56,14 @@ class StoryMaker:
         enhanced_story = self.create_chat_completion(first_story_idea, **kwargs)
         self.initial_story = enhanced_story
 
+        if "theme" not in kwargs:
+            raise ValueError("Theme is not specified.")
+
+        enhance_prompt_files = ["enhance_story.md", "enhance_story2.md"]
         for i in range(count_enhancement):
-            enhance_prompt = read_prompt("enhance_story.md")
+            enhance_prompt = read_prompt(enhance_prompt_files[i])
             enhance_prompt = enhance_prompt.replace("{story}", enhanced_story)
+            enhance_prompt = enhance_prompt.replace("{theme}", kwargs["theme"])
             max_completion_tokens = (
                 BASE_MAX_COMPLETION_TOKENS + count_tokens(enhance_prompt, "o1-mini") * 2
             )
@@ -86,12 +75,8 @@ class StoryMaker:
 
     def create_title_and_synopsis(self) -> str:
         title_and_synopsis_prompt = read_prompt("title_synopsis.md")
-        title_and_synopsis_prompt = title_and_synopsis_prompt.replace(
-            "{story}", self.final_story
-        )
-        self.title_and_synopsis_output = self.create_chat_completion(
-            title_and_synopsis_prompt
-        )
+        title_and_synopsis_prompt = title_and_synopsis_prompt.replace("{story}", self.final_story)
+        self.title_and_synopsis_output = self.create_chat_completion(title_and_synopsis_prompt)
         return self.title_and_synopsis_output
 
     def create_frontmatter(self) -> str:
@@ -116,9 +101,7 @@ class StoryMaker:
         dir_path = os.path.dirname(file_name)
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
-        today = datetime.datetime.now(zoneinfo.ZoneInfo("Asia/Tokyo")).strftime(
-            "%Y-%m-%d"
-        )
+        today = datetime.datetime.now(zoneinfo.ZoneInfo("Asia/Tokyo")).strftime("%Y-%m-%d")
         frontmatter_text = "---\n"
         frontmatter_text += f"title: {self.frontmatter.title}\n"
         frontmatter_text += f"description: {self.frontmatter.synopsis}\n"
@@ -134,10 +117,15 @@ class StoryMaker:
         with open(file_name, "w") as f:
             f.write(markdown_output)
 
-    def process_steps(self, characters: str, output_dir: str):
+    def process_steps(self, characters: str, output_dir: str, **kwargs):
         init_prompt = read_prompt("initial_story.md")
         init_prompt = init_prompt.replace("{characters}", characters)
-        self.create_story(init_prompt, count_enhancement=2)
+        if "theme" not in kwargs:
+            theme = random.choice(THEME_LIST)
+            kwargs["theme"] = theme
+        init_prompt = init_prompt.replace("{theme}", kwargs["theme"])
+
+        self.create_story(init_prompt, count_enhancement=2, **kwargs)
         plain_text_file_name = os.path.join(output_dir, "story.md")
         self.save_story_as_plain_text(self.final_story, plain_text_file_name)
         self.create_title_and_synopsis()
@@ -146,14 +134,21 @@ class StoryMaker:
         self.create_novel_post(final_file_name)
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--input", "-i", type=str)
-    parser.add_argument("--output_dir", "-o", type=str)
-    args = parser.parse_args()
+def main(args=None):
+    parser = argparse.ArgumentParser(description="Create a story")
+    parser.add_argument("--input", "-i", type=str, required=True, help="Input character file")
+    parser.add_argument(
+        "--output_dir", "-o", type=str, required=True, help="Output directory for the story"
+    )
+
+    if args is None:
+        args = parser.parse_args()
+    else:
+        args = parser.parse_args(args)
+
     story_maker = StoryMaker()
     characters = load_markdown_as_prompt(args.input)
-    story_maker.process_steps(characters, args.output_dir)
+    story_maker.process_steps(characters, args.output_dir, theme="ディストピア")
 
 
 if __name__ == "__main__":
