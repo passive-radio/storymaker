@@ -59,7 +59,7 @@ class StoryMaker:
         if "theme" not in kwargs:
             raise ValueError("Theme is not specified.")
 
-        enhance_prompt_files = ["enhance_story.md", "enhance_story_two.md"]
+        enhance_prompt_files = ["enhance_story.md", "enhance_story2.md"]
         for i in range(count_enhancement):
             enhance_prompt = read_prompt(enhance_prompt_files[i])
             enhance_prompt = enhance_prompt.replace("{story}", enhanced_story)
