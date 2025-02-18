@@ -13,6 +13,10 @@ def main():
     character_parser.add_argument(
         "-o", "--output", type=str, required=True, help="Output character settings file"
     )
+    character_parser.add_argument(
+        "-m", "--manuscript", type=str, required=False, help=("Manuscript file." 
+                            "This file contains the model name for each step.")
+    )
 
     # Subcommand for story
     story_parser = subparsers.add_parser("story", help="Create a story")
@@ -20,12 +24,16 @@ def main():
     story_parser.add_argument(
         "-o", "--output_dir", type=str, required=True, help="Output directory for the story"
     )
+    story_parser.add_argument(
+        "-m", "--manuscript", type=str, required=False, help=("Manuscript file." 
+                            "This file contains the model name for each step.")
+    )
 
     args = parser.parse_args()
 
     if args.command == "character":
-        create_character_main(["--input", args.input, "--output", args.output])
+        create_character_main(["--input", args.input, "--output", args.output, "--manuscript", args.manuscript])
     elif args.command == "story":
-        create_story_main(["--input", args.input, "--output_dir", args.output_dir])
+        create_story_main(["--input", args.input, "--output_dir", args.output_dir, "--manuscript", args.manuscript])
     else:
         parser.print_help()
