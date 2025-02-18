@@ -3,22 +3,22 @@ import argparse
 
 import openai
 
-from storymaker.utils import load_api_key, read_prompt, load_markdown_as_prompt
+from storymaker.utils import load_api_key, read_prompt, load_markdown_as_prompt, load_manuscript
 
 
 class CharacterMaker:
-    def __init__(self) -> None:
-        self.client = openai.OpenAI(api_key=load_api_key())
+    def __init__(self, manuscript_path: str) -> None:
+        self.client = openai.OpenAI(api_key=load_api_key(), base_url="https://openrouter.ai/api/v1")
+        self.manuscript = load_manuscript(manuscript_path)
 
     def create_character_settings(self, prompt: str, **kwargs) -> str:
-        if "model" not in kwargs:
-            kwargs["model"] = "gpt-4o"
+        model = self.manuscript["characters"]
         if "max_completion_tokens" not in kwargs:
             kwargs["max_completion_tokens"] = 3000
         if "top_p" not in kwargs:
             kwargs["top_p"] = 1.0
         response = self.client.beta.chat.completions.parse(
-            model=kwargs["model"],
+            model=model,
             messages=[{"role": "user", "content": prompt}],
             max_completion_tokens=kwargs["max_completion_tokens"],
             top_p=kwargs["top_p"],
@@ -50,13 +50,14 @@ def main(args=None):
     parser.add_argument(
         "--output", "-o", type=str, required=True, help="Output character settings file"
     )
+    parser.add_argument("--manuscript", "-m", type=str, required=False, help="Manuscript file")
     if args is None:
         args = parser.parse_args()
     else:
         args = parser.parse_args(args)
 
     news = load_markdown_as_prompt(args.input)
-    character_maker = CharacterMaker()
+    character_maker = CharacterMaker(args.manuscript)
     character_maker.process_steps(news, args.output)
 
 
