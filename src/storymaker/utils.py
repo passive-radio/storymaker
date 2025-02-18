@@ -35,9 +35,9 @@ def count_tokens_from_file(file_path: str, model: str) -> int:
     return count_tokens(text, model)
 
 
-def load_api_key(service: str = "OPENROUTER_API_KEY"):
-    if os.path.exists(".env.local"):
-        load_dotenv(".env.local")
+def load_api_key(filepath: str, service: str = "OPENROUTER_API_KEY"):
+    if os.path.exists(filepath):
+        load_dotenv(filepath)
     else:
         load_dotenv()
     return os.getenv(service)

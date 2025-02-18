@@ -20,8 +20,9 @@ BASE_MAX_COMPLETION_TOKENS = 10000
 
 
 class StoryMaker:
-    def __init__(self, manuscript_path: str) -> None:
-        self.client = openai.OpenAI(api_key=load_api_key(), base_url="https://openrouter.ai/api/v1")
+    def __init__(self, manuscript_path: str, env_path: str) -> None:
+        self.env_path = env_path
+        self.client = openai.OpenAI(api_key=load_api_key(env_path), base_url="https://openrouter.ai/api/v1")
         self.responses = []
         self.manuscript = load_manuscript(manuscript_path)
 
@@ -106,7 +107,7 @@ class StoryMaker:
         frontmatter_prompt = frontmatter_prompt.replace(
             "{title_and_synopsis}", self.title_and_synopsis_output
         )
-        client = openai.OpenAI(api_key=load_api_key("OPENAI_API_KEY"))
+        client = openai.OpenAI(api_key=load_api_key(self.env_path, "OPENAI_API_KEY"))
         response = client.beta.chat.completions.parse(
             model=frontmatter_model,
             messages=[{"role": "user", "content": frontmatter_prompt}],
@@ -174,7 +175,10 @@ def main(args=None):
         "--manuscript", "-m", type=str, required=False, help=("Manuscript file." 
                             "This file contains the model name for each step.")
     )
-    
+    parser.add_argument(
+        "--env", "-e", type=str, required=False, help=("Environment file." 
+                            "This file contains the model name for each step.")
+    )
     kwargs = {}
 
     if args is None:
@@ -182,7 +186,7 @@ def main(args=None):
     else:
         args = parser.parse_args(args)
 
-    story_maker = StoryMaker(args.manuscript)
+    story_maker = StoryMaker(args.manuscript, args.env)
     characters = load_markdown_as_prompt(args.input)
     story_maker.process_steps(characters, args.output_dir, theme="ディストピア", **kwargs)
 

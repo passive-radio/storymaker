@@ -7,8 +7,8 @@ from storymaker.utils import load_api_key, read_prompt, load_markdown_as_prompt,
 
 
 class CharacterMaker:
-    def __init__(self, manuscript_path: str) -> None:
-        self.client = openai.OpenAI(api_key=load_api_key(), base_url="https://openrouter.ai/api/v1")
+    def __init__(self, manuscript_path: str, env_path: str) -> None:
+        self.client = openai.OpenAI(api_key=load_api_key(env_path), base_url="https://openrouter.ai/api/v1")
         self.manuscript = load_manuscript(manuscript_path)
 
     def create_character_settings(self, prompt: str, **kwargs) -> str:
@@ -51,13 +51,15 @@ def main(args=None):
         "--output", "-o", type=str, required=True, help="Output character settings file"
     )
     parser.add_argument("--manuscript", "-m", type=str, required=False, help="Manuscript file")
+    parser.add_argument("--env", "-e", type=str, required=False, help="Environment file")
+    
     if args is None:
         args = parser.parse_args()
     else:
         args = parser.parse_args(args)
 
     news = load_markdown_as_prompt(args.input)
-    character_maker = CharacterMaker(args.manuscript)
+    character_maker = CharacterMaker(args.manuscript, args.env)
     character_maker.process_steps(news, args.output)
 
 
