@@ -1,31 +1,20 @@
 import os
 import argparse
 
-import openai
+from storymaker.utils import read_prompt, load_markdown_as_prompt
+from storymaker.base_maker import BaseMaker
 
-from storymaker.utils import load_api_key, read_prompt, load_markdown_as_prompt, load_manuscript
-
-
-class CharacterMaker:
+class CharacterMaker(BaseMaker):
     def __init__(self, manuscript_path: str, env_path: str) -> None:
-        self.client = openai.OpenAI(api_key=load_api_key(env_path), base_url="https://openrouter.ai/api/v1")
-        self.manuscript = load_manuscript(manuscript_path)
+        super().__init__(manuscript_path, env_path)
 
     def create_character_settings(self, prompt: str, **kwargs) -> str:
-        model = self.manuscript["characters"]
-        if "max_completion_tokens" not in kwargs:
-            kwargs["max_completion_tokens"] = 5000
-        if "top_p" not in kwargs:
-            kwargs["top_p"] = 0.85
-        if "temperature" not in kwargs:
-            kwargs["temperature"] = 0.7
-        response = self.client.beta.chat.completions.parse(
-            model=model,
-            messages=[{"role": "user", "content": prompt}],
-            max_completion_tokens=kwargs["max_completion_tokens"],
-            top_p=kwargs["top_p"],
-            temperature=kwargs["temperature"],
-        )
+        character_creation_kwargs = {
+            "model": self.manuscript["characters"]["model"],
+            "temperature": self.manuscript["characters"]["temperature"],
+            "top_p": self.manuscript["characters"]["top_p"],
+        }
+        response = self.create_chat_completion(prompt, **character_creation_kwargs)
         self.character_settings = response.choices[0].message.content
         return self.character_settings
 

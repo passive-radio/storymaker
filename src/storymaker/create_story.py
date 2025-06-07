@@ -1,5 +1,4 @@
 import os
-import openai
 import datetime
 import zoneinfo
 import random
@@ -8,10 +7,8 @@ import argparse
 from storymaker.utils import (
     load_markdown_as_prompt,
     count_tokens,
-    load_api_key,
     read_prompt,
     no_heading_story,
-    load_manuscript,
 )
 from storymaker.classmodel import NovelFrontmatter
 from storymaker.theme import THEME_LIST
