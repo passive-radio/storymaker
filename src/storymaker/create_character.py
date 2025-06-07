@@ -14,14 +14,17 @@ class CharacterMaker:
     def create_character_settings(self, prompt: str, **kwargs) -> str:
         model = self.manuscript["characters"]
         if "max_completion_tokens" not in kwargs:
-            kwargs["max_completion_tokens"] = 3000
+            kwargs["max_completion_tokens"] = 5000
         if "top_p" not in kwargs:
-            kwargs["top_p"] = 1.0
+            kwargs["top_p"] = 0.85
+        if "temperature" not in kwargs:
+            kwargs["temperature"] = 0.7
         response = self.client.beta.chat.completions.parse(
             model=model,
             messages=[{"role": "user", "content": prompt}],
             max_completion_tokens=kwargs["max_completion_tokens"],
             top_p=kwargs["top_p"],
+            temperature=kwargs["temperature"],
         )
         self.character_settings = response.choices[0].message.content
         return self.character_settings

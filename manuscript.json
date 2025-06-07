@@ -1,8 +1,0 @@
-{
-    "characters": "deepseek/deepseek-r1",
-    "story": "deepseek/deepseek-r1",
-    "title_and_synopsis": "openai/o1-mini",
-    "frontmatter": "gpt-4o",
-    "enhance_story": "openai/o1",
-    "enhance_story2": "openai/o1"
-}

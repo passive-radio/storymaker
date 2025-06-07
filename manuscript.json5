@@ -1,0 +1,33 @@
+{
+    "characters": {
+        "model": "google/gemini-2.5-pro-preview",
+        "temperature": 0.7,
+        "top_p": 0.85,
+    },
+    "story": {
+        "model": "openai/o3",
+        "temperature": 0.8,
+        "top_p": 0.85,
+    },
+    "title_and_synopsis": {
+        "model": "openai/o1-mini",
+        "temperature": 0.6,
+        "top_p": 0.6,
+    },
+    "enhance_story1": {
+        "model": "openai/o3",
+        "temperature": 0.8,
+        "top_p": 0.85,
+    },
+    "enhance_story2": {
+        "model": "openai/o3",
+        "temperature": 0.8,
+        "top_p": 0.85,
+    },
+    "frontmatter": {
+        "model": "openai/gpt-4.1",
+        "temperature": 0,
+        "top_p": 0,
+    },
+    "api_base_path": "https://openrouter.ai/api/v1",
+}

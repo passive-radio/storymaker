@@ -2,10 +2,10 @@ import os
 import re
 import json
 
+import json5
 import tiktoken
 from dotenv import load_dotenv
 import pkg_resources
-
 
 def load_markdown_as_prompt(file_path: str) -> str:
     with open(file_path, "r") as file:
@@ -18,6 +18,8 @@ models_encoding = {
     "openai/gpt-4o": "o200k_base",
     "openai/gpt-4o-mini": "o200k_base",
     "openai/o1": "o200k_base",
+    "openai/o3": "o200k_base",
+    "google/gemini-2.5-pro-preview": "o200k_base",
 }
 
 def count_tokens(text: str, model: str) -> int:
@@ -59,4 +61,4 @@ def no_heading_story(story: str) -> str:
 def load_manuscript(file_path: str) -> dict:
     with open(file_path, "r") as file:
         # return as dict
-        return json.load(file)
+        return json5.load(file)
