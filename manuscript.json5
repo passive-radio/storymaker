@@ -10,18 +10,18 @@
         "top_p": 0.85,
     },
     "title_and_synopsis": {
-        "model": "openai/o1-mini",
+        "model": "openai/o3",
         "temperature": 0.6,
         "top_p": 0.6,
     },
     "enhance_story1": {
         "model": "openai/o3",
-        "temperature": 0.8,
+        "temperature": 0.9,
         "top_p": 0.85,
     },
     "enhance_story2": {
         "model": "openai/o3",
-        "temperature": 0.8,
+        "temperature": 0.9,
         "top_p": 0.85,
     },
     "frontmatter": {

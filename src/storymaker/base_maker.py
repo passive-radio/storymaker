@@ -17,7 +17,10 @@ class BaseMaker:
         self.client = openai.OpenAI(api_key=load_api_key(env_path), base_url=self.manuscript["api_base_path"])
         self.responses = []
 
-    def create_chat_completion(self, prompt: str, **kwargs) -> str:
+    def create_chat_completion(self, prompt: str, system_prompt: str, **kwargs) -> str:
+        if prompt in ("", None) and system_prompt in ("", None):
+            raise ValueError("prompt or system_prompt is not set.")
+        
         if "temperature" not in kwargs:
             kwargs["temperature"] = 0.7
         if "top_p" not in kwargs:
@@ -28,7 +31,7 @@ class BaseMaker:
             response_format = openai._types.NOT_GIVEN
             response = self.client.chat.completions.create(
                 model=kwargs["model"],
-                messages=[{"role": "user", "content": prompt}],
+                messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}],
                 max_completion_tokens=kwargs["max_completion_tokens"],
                 top_p=kwargs["top_p"],
                 temperature=kwargs["temperature"],
@@ -38,7 +41,7 @@ class BaseMaker:
             print(response_format)
             response = self.client.beta.chat.completions.parse(
                 model=kwargs["model"],
-                messages=[{"role": "user", "content": prompt}],
+                messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}],
                 max_completion_tokens=kwargs["max_completion_tokens"],
                 top_p=kwargs["top_p"],
                 temperature=kwargs["temperature"],

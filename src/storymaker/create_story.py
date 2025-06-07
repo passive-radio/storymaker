@@ -11,7 +11,7 @@ from storymaker.utils import (
     no_heading_story,
 )
 from storymaker.classmodel import NovelFrontmatter
-from storymaker.theme import THEME_LIST
+from storymaker.genre import GENRE_LIST
 from storymaker.base_maker import BaseMaker
 BASE_MAX_COMPLETION_TOKENS = 10000
 
@@ -19,11 +19,12 @@ BASE_MAX_COMPLETION_TOKENS = 10000
 class StoryMaker(BaseMaker):
     def __init__(self, manuscript_path: str, env_path: str) -> None:
         super().__init__(manuscript_path, env_path)
+        self.system_prompt = read_prompt("system_prompt.md")
 
     def create_story(self, first_story_idea: str, **kwargs) -> str:
         
-        if "theme" not in kwargs:
-            raise ValueError("Theme is not specified.")
+        if "genre" not in kwargs:
+            raise ValueError("Genre is not specified.")
         
         draft_model = self.manuscript["story"]["model"]
         story_creation_kwargs = {
@@ -31,7 +32,7 @@ class StoryMaker(BaseMaker):
             "temperature": self.manuscript["story"]["temperature"],
             "top_p": self.manuscript["story"]["top_p"],
         }
-        story_draft = self.create_chat_completion(first_story_idea, **story_creation_kwargs)
+        story_draft = self.create_chat_completion(first_story_idea, self.system_prompt, **story_creation_kwargs)
         enhanced_story = story_draft
         self.initial_story = story_draft
         
@@ -47,7 +48,7 @@ class StoryMaker(BaseMaker):
         for i in range(count_enhancement):
             enhance_prompt = read_prompt(enhance_prompt_files[i])
             enhance_prompt = enhance_prompt.replace("{story}", enhanced_story)
-            enhance_prompt = enhance_prompt.replace("{theme}", kwargs["theme"])
+            enhance_prompt = enhance_prompt.replace("{genre}", kwargs["genre"])
             
             enhancement_kwargs = {
                 "model": enhance_models[i],
@@ -56,7 +57,7 @@ class StoryMaker(BaseMaker):
                 "max_completion_tokens": self.count_story_tokens*5 + count_tokens(enhance_prompt, enhance_models[i]),
             }
             
-            enhanced_story = self.create_chat_completion(enhance_prompt, **enhancement_kwargs)
+            enhanced_story = self.create_chat_completion(enhance_prompt, self.system_prompt, **enhancement_kwargs)
             self.count_story_tokens = count_tokens(enhanced_story, enhance_models[i])
             
         self.final_story = enhanced_story
@@ -73,7 +74,7 @@ class StoryMaker(BaseMaker):
         title_and_synopsis_prompt = read_prompt("title_synopsis.md")
         title_and_synopsis_prompt = title_and_synopsis_prompt.replace("{story}", self.final_story)
         self.title_and_synopsis_output = self.create_chat_completion(
-            title_and_synopsis_prompt, **title_and_synopsis_kwargs
+            title_and_synopsis_prompt, self.system_prompt, **title_and_synopsis_kwargs
         )
         return self.title_and_synopsis_output
 
@@ -95,7 +96,7 @@ class StoryMaker(BaseMaker):
         #     messages=[{"role": "user", "content": frontmatter_prompt}],
         #     response_format=NovelFrontmatter,
         # )
-        response = self.create_chat_completion(frontmatter_prompt, **frontmatter_kwargs)
+        response = self.create_chat_completion(frontmatter_prompt, self.system_prompt, **frontmatter_kwargs)
         self.frontmatter = response
         # self.frontmatter = self.create_chat_completion(
         #     frontmatter_prompt, model=frontmatter_model, 
@@ -134,10 +135,10 @@ class StoryMaker(BaseMaker):
     def process_steps(self, characters: str, output_dir: str, **kwargs):
         init_prompt = read_prompt("initial_story.md")
         init_prompt = init_prompt.replace("{characters}", characters)
-        if "theme" not in kwargs:
-            theme = random.choice(THEME_LIST)
-            kwargs["theme"] = theme
-        init_prompt = init_prompt.replace("{theme}", kwargs["theme"])
+        if "genre" not in kwargs:
+            genre = random.choice(GENRE_LIST)
+            kwargs["genre"] = genre
+        init_prompt = init_prompt.replace("{genre}", kwargs["genre"])
 
         self.create_story(init_prompt, count_enhancement=2, **kwargs)
         plain_text_file_name = os.path.join(output_dir, "story.md")
@@ -162,16 +163,22 @@ def main(args=None):
         "--env", "-e", type=str, required=False, help=("Environment file." 
                             "This file contains the model name for each step.")
     )
+    parser.add_argument(
+        "--genre", "-g", type=str, required=False, help=("Genre of the story.")
+    )
     kwargs = {}
 
     if args is None:
         args = parser.parse_args()
     else:
         args = parser.parse_args(args)
+        
+    if args.genre is not None:
+        kwargs["genre"] = args.genre
 
     story_maker = StoryMaker(args.manuscript, args.env)
     characters = load_markdown_as_prompt(args.input)
-    story_maker.process_steps(characters, args.output_dir, theme="ディストピア", **kwargs)
+    story_maker.process_steps(characters, args.output_dir, **kwargs)
 
 
 if __name__ == "__main__":

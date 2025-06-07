@@ -21,6 +21,9 @@ def main():
         "-e", "--env", type=str, required=False, help=("Environment file." 
                             "This file contains the model name for each step.")
     )
+    character_parser.add_argument(
+        "--genre", "-g", type=str, required=False, help=("Genre of the story.")
+    )
 
     # Subcommand for story
     story_parser = subparsers.add_parser("story", help="Create a story")
@@ -36,12 +39,15 @@ def main():
         "-e", "--env", type=str, required=False, help=("Environment file." 
                             "This file contains the model name for each step.")
     )
+    story_parser.add_argument(
+        "--genre", "-g", type=str, required=False, help=("Genre of the story.")
+    )
 
     args = parser.parse_args()
 
     if args.command == "character":
-        create_character_main(["--input", args.input, "--output", args.output, "--manuscript", args.manuscript, "--env", args.env])
+        create_character_main(["--input", args.input, "--output", args.output, "--manuscript", args.manuscript, "--env", args.env, "--genre", args.genre])
     elif args.command == "story":
-        create_story_main(["--input", args.input, "--output_dir", args.output_dir, "--manuscript", args.manuscript, "--env", args.env])
+        create_story_main(["--input", args.input, "--output_dir", args.output_dir, "--manuscript", args.manuscript, "--env", args.env, "--genre", args.genre])
     else:
         parser.print_help()
