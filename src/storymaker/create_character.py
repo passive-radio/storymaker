@@ -14,8 +14,7 @@ class CharacterMaker(BaseMaker):
             "temperature": self.manuscript["characters"]["temperature"],
             "top_p": self.manuscript["characters"]["top_p"],
         }
-        response = self.create_chat_completion(prompt, **character_creation_kwargs)
-        self.character_settings = response.choices[0].message.content
+        self.character_settings = self.create_chat_completion(prompt, **character_creation_kwargs)
         return self.character_settings
 
     def make_init_prompt(self, news: str, language: str = "日本語") -> str:
