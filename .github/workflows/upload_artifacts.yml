@@ -1,38 +1,59 @@
-name: Deploy to Google Artifact Registry
+name: Publish package to Google Artifact Registry
 
 on:
-  release:
-    types: [published]
   push:
-    branches:
-      - main
+    tags:
+      - 'v*'            # 例: v1.0.0, v1.2.3 だけで発火
+  workflow_dispatch:
+
+permissions:
+  contents: read        # Checkout に必要
+  id-token: write       # google-github-actions/auth@v2 に必要
+
 jobs:
-  deploy:
-    name: Build python package and deploy to Google Artifact Registry
+  build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      # 1) ソース取得 ― 履歴とタグをすべて持ってくる
+      - name: Checkout source
+        uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref }}
+          fetch-depth: 0
+          fetch-tags:  true
+
+      # 2) Python セットアップ
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Install dependencies
+
+      # 3) ビルドに必要なツールのみインストール
+      - name: Install build tools
         run: |
           python -m pip install --upgrade pip
-          python -m pip install setuptools wheel build twine 
-          python -m pip install -r requirements.txt
-          python -m pip install keyring keyrings.google-artifactregistry-auth
-      - name: Build package
-        run: |
-          python -m build --sdist --wheel --outdir dist/ .
-      - id: 'auth'
-        uses: 'google-github-actions/auth@v2'
+          python -m pip install build twine \
+                               keyring \
+                               keyrings.google-artifactregistry-auth
+
+      # 4) パッケージをビルド
+      - name: Build wheel & sdist
+        run: python -m build --sdist --wheel --outdir dist/
+
+      # 5) Google Cloud 認証
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
-      - name: Setup Google Cloud
-        uses: 'google-github-actions/setup-gcloud@v2'
-      - name: Deploy to Google Artifact Registry
-        run: |
-          python -m twine upload --repository-url https://${{ vars.GAR_REGION }}-python.pkg.dev/${{ vars.GAR_PROJECT }}/${{ vars.GAR_REPOSITORY }}/ dist/*
+
+      # 6) gcloud CLI を入れる（キーリング連携で必要）
+      - name: Install gcloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      # 7) Artifact Registry へアップロード
+      - name: Upload to Artifact Registry
+        env:
+          TWINE_NON_INTERACTIVE: "1"
+          REPO_URL: https://${{ vars.GAR_REGION }}-python.pkg.dev/${{ vars.GAR_PROJECT }}/${{ vars.GAR_REPOSITORY }}/
+        run: python -m twine upload --repository-url "$REPO_URL" dist/*
