@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - 'v*'            # 例: v1.0.0, v1.2.3 だけで発火
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
