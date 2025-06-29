@@ -35,6 +35,7 @@ class BaseMaker:
                 max_completion_tokens=kwargs["max_completion_tokens"],
                 top_p=kwargs["top_p"],
                 temperature=kwargs["temperature"],
+                stream=False,
             )
         else:
             response_format = kwargs["response_format"]
