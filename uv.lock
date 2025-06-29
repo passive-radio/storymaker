@@ -339,7 +339,7 @@ wheels = [
 
 [[package]]
 name = "storymaker"
-version = "1.0.6"
+version = "1.0.7"
 source = { editable = "." }
 dependencies = [
     { name = "json5" },
