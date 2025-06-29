@@ -13,7 +13,7 @@ name = "storymaker"
 version = "1.0.6"
 description = "Storymaker is a tool for creating stories."
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.10"
 dependencies = [
     "openai==1.84.0",
     "python-dotenv==1.0.1",
