@@ -14,11 +14,11 @@ from storymaker.utils import (
 from storymaker.classmodel import NovelFrontmatter
 from storymaker.genre import GENRE_LIST
 from storymaker.base_maker import BaseMaker
-BASE_MAX_COMPLETION_TOKENS = 10000
+BASE_MAX_COMPLETION_TOKENS = 100000
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 class StoryMaker(BaseMaker):
     def __init__(self, manuscript_path: str, env_path: str) -> None:
@@ -37,8 +37,11 @@ class StoryMaker(BaseMaker):
                 "model": draft_model,
                 "temperature": self.manuscript["story"]["temperature"],
                 "top_p": self.manuscript["story"]["top_p"],
+                "reasoning_effort": self.manuscript["story"]["reasoning_effort"],
             }
             story_draft = self.create_chat_completion(first_story_idea, self.system_prompt, **story_creation_kwargs)
+            logger.info(f"Story draft generated.")
+
             enhanced_story = story_draft
             self.initial_story = story_draft
             
@@ -51,20 +54,37 @@ class StoryMaker(BaseMaker):
 
             enhance_prompt_files = ["enhance_story1.md", "enhance_story2.md"]
             enhance_models = [self.manuscript["enhance_story1"]["model"], self.manuscript["enhance_story2"]["model"]]
+            reasoning_effort = [self.manuscript["enhance_story1"]["reasoning_effort"], self.manuscript["enhance_story2"]["reasoning_effort"]]
             for i in range(count_enhancement):
+                logger.info(f"Enhancing story {i+1}...")
                 enhance_prompt = read_prompt(enhance_prompt_files[i])
                 enhance_prompt = enhance_prompt.replace("{story}", enhanced_story)
                 enhance_prompt = enhance_prompt.replace("{genre}", kwargs["genre"])
+                
+                # Calculate token counts for debugging
+                story_tokens = self.count_story_tokens
+                prompt_tokens = count_tokens(enhance_prompt, enhance_models[i])
+                calculated_max_tokens = story_tokens * 5 + prompt_tokens
+                
+                # Apply reasonable limits for reasoning models (need space for thinking + output)
+                # Minimum 40000 for reasoning tokens, but cap at a reasonable maximum
+                max_safe_tokens = min(max(calculated_max_tokens, 40000), 200000)
+                
+                logger.info(f"Token calculation: story_tokens={story_tokens}, prompt_tokens={prompt_tokens}")
+                logger.info(f"Calculated max_tokens={calculated_max_tokens}, using safe_limit={max_safe_tokens}")
                 
                 enhancement_kwargs = {
                     "model": enhance_models[i],
                     "temperature": self.manuscript[f"enhance_story{i+1}"]["temperature"],
                     "top_p": self.manuscript[f"enhance_story{i+1}"]["top_p"],
-                    "max_completion_tokens": self.count_story_tokens*5 + count_tokens(enhance_prompt, enhance_models[i]),
+                    "reasoning_effort": reasoning_effort[i],
+                    "max_completion_tokens": max_safe_tokens,
                 }
                 
                 enhanced_story = self.create_chat_completion(enhance_prompt, self.system_prompt, **enhancement_kwargs)
                 self.count_story_tokens = count_tokens(enhanced_story, enhance_models[i])
+                
+                logger.info(f"Story enhancement {i+1} completed.")
                 
             self.final_story = enhanced_story
             self.no_heading_final_story = no_heading_story(enhanced_story)
@@ -81,6 +101,7 @@ class StoryMaker(BaseMaker):
                 "model": title_and_synopsis_model,
                 "temperature": self.manuscript["title_and_synopsis"]["temperature"],
                 "top_p": self.manuscript["title_and_synopsis"]["top_p"],
+                "reasoning_effort": self.manuscript["title_and_synopsis"].get("reasoning_effort", "medium"),
             }
             title_and_synopsis_prompt = read_prompt("title_synopsis.md")
             title_and_synopsis_prompt = title_and_synopsis_prompt.replace("{story}", self.final_story)

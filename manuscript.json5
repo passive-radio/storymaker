@@ -5,24 +5,28 @@
         "top_p": 0.85,
     },
     "story": {
-        "model": "openai/o3",
+        "model": "openai/gpt-5",
         "temperature": 0.8,
         "top_p": 0.85,
+        "reasoning_effort": "high",
     },
     "title_and_synopsis": {
-        "model": "openai/o3",
+        "model": "openai/gpt-5",
         "temperature": 0.6,
         "top_p": 0.6,
+        "reasoning_effort": "medium",
     },
     "enhance_story1": {
-        "model": "openai/o3",
+        "model": "openai/gpt-5",
         "temperature": 0.9,
         "top_p": 0.85,
+        "reasoning_effort": "high",
     },
     "enhance_story2": {
-        "model": "openai/o3",
+        "model": "openai/gpt-5",
         "temperature": 0.9,
         "top_p": 0.85,
+        "reasoning_effort": "high",
     },
     "frontmatter": {
         "model": "openai/gpt-4.1",

@@ -5,11 +5,11 @@ import logging
 
 from storymaker.utils import load_api_key, read_prompt, load_markdown_as_prompt, load_manuscript
 
-BASE_MAX_COMPLETION_TOKENS = 10000
+BASE_MAX_COMPLETION_TOKENS = 100000
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 class BaseMaker:
     def __init__(self, manuscript_path: str, env_path: str) -> None:
@@ -35,27 +35,32 @@ class BaseMaker:
         if "max_completion_tokens" not in kwargs:
             kwargs["max_completion_tokens"] = BASE_MAX_COMPLETION_TOKENS
             
+        logger.info(f"input kwargs: {kwargs}")
+        
+        response = None  # Initialize response variable
         try:
             if "response_format" not in kwargs:
                 response_format = openai._types.NOT_GIVEN
                 response = self.client.chat.completions.create(
-                    model=kwargs["model"],
+                    model=kwargs.get("model", "gpt-5"),
                     messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}],
-                    max_completion_tokens=kwargs["max_completion_tokens"],
-                    top_p=kwargs["top_p"],
-                    temperature=kwargs["temperature"],
+                    max_completion_tokens=kwargs.get("max_completion_tokens"),
+                    top_p=kwargs.get("top_p", 0.85),
+                    temperature=kwargs.get("temperature", 0.7),
                     stream=False,
+                    reasoning_effort=kwargs.get("reasoning_effort", None),
                 )
             else:
                 response_format = kwargs["response_format"]
                 print(response_format)
                 response = self.client.beta.chat.completions.parse(
-                    model=kwargs["model"],
+                    model=kwargs.get("model", "gpt-4.1"),
                     messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}],
-                    max_completion_tokens=kwargs["max_completion_tokens"],
-                    top_p=kwargs["top_p"],
-                    temperature=kwargs["temperature"],
+                    max_completion_tokens=kwargs.get("max_completion_tokens"),
+                    top_p=kwargs.get("top_p", 0.0),
+                    temperature=kwargs.get("temperature", 0.0),
                     response_format=response_format,
+                    reasoning_effort=kwargs.get("reasoning_effort", None),
                 )
             
             print(response)
@@ -71,4 +76,6 @@ class BaseMaker:
             
         except Exception as e:
             logger.error(f"Error creating chat completion: {e}")
+            logger.error(f"input kwargs: {kwargs}")
+            logger.error(f"response: {response}")
             raise e
