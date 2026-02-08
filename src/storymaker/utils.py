@@ -20,7 +20,14 @@ models_encoding = {
     "openai/o1": "o200k_base",
     "openai/o3": "o200k_base",
     "google/gemini-2.5-pro-preview": "o200k_base",
+    "google/gemini-2.5-pro-preview": "o200k_base",
     "openai/gpt-5": "o200k_base",
+    "openai/gpt-5-mini": "o200k_base",
+    "openai/gpt-5.1": "o200k_base",
+    "openai/gpt-5.2": "o200k_base",
+    "google/gemini-2.5-pro": "o200k_base",
+    "google/gemini-3-flash-preview": "o200k_base",
+    "google/gemini-3-pro-preview": "o200k_base",
 }
 
 def count_tokens(text: str, model: str) -> int:
