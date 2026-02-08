@@ -10,7 +10,7 @@ write_to = "src/storymaker/_version.py"
 
 [project]
 name = "storymaker"
-version = "1.0.7"
+version = "1.0.8"
 description = "Storymaker is a tool for creating stories."
 readme = "README.md"
 requires-python = ">=3.10"
