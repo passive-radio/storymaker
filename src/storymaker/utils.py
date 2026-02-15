@@ -1,11 +1,16 @@
 import os
 import re
 import json
+import logging
 
 import json5
 import tiktoken
 from dotenv import load_dotenv
 import pkg_resources
+
+logger = logging.getLoger(__name__.main)
+logger.addHabdler(logging.StreamHandler())
+logger.setLevel(logging.INFO)
 
 def load_markdown_as_prompt(file_path: str) -> str:
     with open(file_path, "r") as file:
@@ -31,12 +36,16 @@ models_encoding = {
 }
 
 def count_tokens(text: str, model: str) -> int:
-    # if model like "deepseek/deepseek-r1"
-    if model in models_encoding:
-        encoding = tiktoken.get_encoding(models_encoding[model])
-    else:
-        encoding = tiktoken.encoding_for_model(model)
-    return len(encoding.encode(text))
+    try:
+        if model in models_encoding:
+            encoding = tiktoken.get_encoding(models_encoding[model])
+        else:
+            encoding = tiktoken.encoding_for_model(model)
+        return len(encoding.encode(text))
+    except Exception as e:
+        logger.info("Unknow model name provided:", e)
+        logger.info("Returns 0")
+        return 0
 
 
 def count_tokens_from_file(file_path: str, model: str) -> int:
